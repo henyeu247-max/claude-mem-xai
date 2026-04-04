@@ -324,8 +324,7 @@ export function ContextSettingsModal({
                 </select>
               </FormField>
 
-              {formState.CLAUDE_MEM_PROVIDER === 'xai' && (
-                <>
+
                   <FormField
                     label="xAI API Key"
                     tooltip="Your xAI API key from console.x.ai (or set XAI_API_KEY env var)"
@@ -350,8 +349,6 @@ export function ContextSettingsModal({
                       <option value="grok-3-fast">grok-3-fast</option>
                     </select>
                   </FormField>
-                </>
-              )}
               <FormField
                 label="Worker Port"
                 tooltip="Port for the background worker service"
