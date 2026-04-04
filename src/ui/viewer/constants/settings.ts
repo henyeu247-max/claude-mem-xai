@@ -16,6 +16,8 @@ export const DEFAULT_SETTINGS = {
   CLAUDE_MEM_OPENROUTER_MODEL: 'xiaomi/mimo-v2-flash:free',
   CLAUDE_MEM_OPENROUTER_SITE_URL: '',
   CLAUDE_MEM_OPENROUTER_APP_NAME: 'claude-mem',
+  CLAUDE_MEM_XAI_API_KEY: '',
+  CLAUDE_MEM_XAI_MODEL: 'grok-4-1-fast-non-reasoning',
   CLAUDE_MEM_GEMINI_RATE_LIMITING_ENABLED: 'true',
 
   // Token Economics — match SettingsDefaultsManager defaults (off by default to keep context lean)
