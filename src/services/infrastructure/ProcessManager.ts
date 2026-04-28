@@ -34,6 +34,7 @@ const ORPHAN_PROCESS_PATTERNS = [
 
 // Only kill processes older than this to avoid killing the current session
 const ORPHAN_MAX_AGE_MINUTES = 30;
+const WINDOWS_STARTUP_GRACE_MINUTES = 2;
 
 interface RuntimeResolverOptions {
   platform?: NodeJS.Platform;
@@ -42,6 +43,12 @@ interface RuntimeResolverOptions {
   homeDirectory?: string;
   pathExists?: (candidatePath: string) => boolean;
   lookupInPath?: (binaryName: string, platform: NodeJS.Platform) => string | null;
+}
+
+interface WindowsProcessRecord {
+  ProcessId: number;
+  CommandLine?: string;
+  CreationDate?: string;
 }
 
 function isBunExecutablePath(executablePath: string | undefined | null): boolean {
@@ -69,6 +76,78 @@ function lookupBinaryInPath(binaryName: string, platform: NodeJS.Platform): stri
   } catch {
     return null;
   }
+}
+
+function encodePowerShellCommand(script: string): string {
+  return Buffer.from(script, 'utf16le').toString('base64');
+}
+
+function escapePowerShellSingleQuotedValue(value: string): string {
+  return value.replace(/'/g, "''");
+}
+
+export function buildWindowsProcessQueryScript(patterns: string[], currentPid: number): string {
+  const wqlPatternConditions = patterns
+    .map(pattern => `CommandLine LIKE '%${pattern.replace(/'/g, "''")}%'`)
+    .join(' OR ')
+    .trim();
+
+  return [
+    `$ErrorActionPreference = 'Stop'`,
+    `$filter = "(${wqlPatternConditions}) AND ProcessId != ${currentPid}"`,
+    `Get-CimInstance Win32_Process -Filter $filter | Select-Object ProcessId, CommandLine, CreationDate | ConvertTo-Json -Compress`
+  ].join('; ');
+}
+
+async function queryWindowsProcesses(patterns: string[], currentPid: number): Promise<WindowsProcessRecord[]> {
+  const encodedCommand = encodePowerShellCommand(buildWindowsProcessQueryScript(patterns, currentPid));
+  const { stdout } = await execAsync(`powershell -NoProfile -NonInteractive -EncodedCommand ${encodedCommand}`, {
+    timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND,
+    windowsHide: true
+  });
+
+  if (!stdout.trim() || stdout.trim() === 'null') {
+    return [];
+  }
+
+  const processes = JSON.parse(stdout) as WindowsProcessRecord | WindowsProcessRecord[];
+  return Array.isArray(processes) ? processes : [processes];
+}
+
+async function getWindowsAncestorPids(startPid: number): Promise<Set<number>> {
+  const ancestorPids = new Set<number>();
+  let currentPid = startPid;
+
+  while (Number.isInteger(currentPid) && currentPid > 0) {
+    const encodedCommand = encodePowerShellCommand([
+      `$ErrorActionPreference = 'Stop'`,
+      `Get-CimInstance Win32_Process -Filter "ProcessId = ${currentPid}" | Select-Object ParentProcessId | ConvertTo-Json -Compress`
+    ].join('; '));
+
+    const { stdout } = await execAsync(`powershell -NoProfile -NonInteractive -EncodedCommand ${encodedCommand}`, {
+      timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND,
+      windowsHide: true
+    });
+
+    if (!stdout.trim() || stdout.trim() === 'null') {
+      break;
+    }
+
+    const processInfo = JSON.parse(stdout) as { ParentProcessId?: number };
+    const parentPid = processInfo.ParentProcessId;
+    if (typeof parentPid !== 'number' || !Number.isInteger(parentPid) || parentPid <= 0 || ancestorPids.has(parentPid)) {
+      break;
+    }
+
+    ancestorPids.add(parentPid);
+    currentPid = parentPid;
+  }
+
+  return ancestorPids;
+}
+
+export function buildWindowsWorkerDaemonArgs(scriptPath: string): string[] {
+  return ['run', scriptPath, '--daemon'];
 }
 
 /**
@@ -315,31 +394,23 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
   const isWindows = process.platform === 'win32';
   const currentPid = process.pid;
   const pidsToKill: number[] = [];
+  const protectedPids = isWindows ? await getWindowsAncestorPids(currentPid) : new Set<number>();
+  protectedPids.add(currentPid);
 
   try {
     if (isWindows) {
-      // Windows: Use WQL -Filter for server-side filtering (no $_ pipeline syntax).
-      // Avoids Git Bash $_ interpretation (#1062) and PowerShell syntax errors (#1024).
-      const wqlPatternConditions = ORPHAN_PROCESS_PATTERNS
-        .map(p => `CommandLine LIKE '%${p}%'`)
-        .join(' OR ');
+      const processList = await queryWindowsProcesses(ORPHAN_PROCESS_PATTERNS, currentPid);
 
-      const cmd = `powershell -NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process -Filter '(${wqlPatternConditions}) AND ProcessId != ${currentPid}' | Select-Object ProcessId, CreationDate | ConvertTo-Json"`;
-      const { stdout } = await execAsync(cmd, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND, windowsHide: true });
-
-      if (!stdout.trim() || stdout.trim() === 'null') {
+      if (processList.length === 0) {
         logger.debug('SYSTEM', 'No orphaned claude-mem processes found (Windows)');
         return;
       }
-
-      const processes = JSON.parse(stdout);
-      const processList = Array.isArray(processes) ? processes : [processes];
       const now = Date.now();
 
       for (const proc of processList) {
         const pid = proc.ProcessId;
         // SECURITY: Validate PID is positive integer and not current process
-        if (!Number.isInteger(pid) || pid <= 0 || pid === currentPid) continue;
+        if (!Number.isInteger(pid) || pid <= 0 || protectedPids.has(pid)) continue;
 
         // Parse Windows WMI date format: /Date(1234567890123)/
         const creationMatch = proc.CreationDate?.match(/\/Date\((\d+)\)\//);
@@ -452,33 +523,38 @@ export async function aggressiveStartupCleanup(): Promise<void> {
   const currentPid = process.pid;
   const pidsToKill: number[] = [];
   const allPatterns = [...AGGRESSIVE_CLEANUP_PATTERNS, ...AGE_GATED_CLEANUP_PATTERNS];
+  const protectedPids = isWindows ? await getWindowsAncestorPids(currentPid) : new Set<number>();
+  protectedPids.add(currentPid);
 
   try {
     if (isWindows) {
-      // Use WQL -Filter for server-side filtering (no $_ pipeline syntax).
-      // Avoids Git Bash $_ interpretation (#1062) and PowerShell syntax errors (#1024).
-      const wqlPatternConditions = allPatterns
-        .map(p => `CommandLine LIKE '%${p}%'`)
-        .join(' OR ');
+      const processList = await queryWindowsProcesses(allPatterns, currentPid);
 
-      const cmd = `powershell -NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process -Filter '(${wqlPatternConditions}) AND ProcessId != ${currentPid}' | Select-Object ProcessId, CommandLine, CreationDate | ConvertTo-Json"`;
-      const { stdout } = await execAsync(cmd, { timeout: HOOK_TIMEOUTS.POWERSHELL_COMMAND, windowsHide: true });
-
-      if (!stdout.trim() || stdout.trim() === 'null') {
+      if (processList.length === 0) {
         logger.debug('SYSTEM', 'No orphaned claude-mem processes found (Windows)');
         return;
       }
-
-      const processes = JSON.parse(stdout);
-      const processList = Array.isArray(processes) ? processes : [processes];
       const now = Date.now();
 
       for (const proc of processList) {
         const pid = proc.ProcessId;
-        if (!Number.isInteger(pid) || pid <= 0 || pid === currentPid) continue;
+        if (!Number.isInteger(pid) || pid <= 0 || protectedPids.has(pid)) continue;
 
         const commandLine = proc.CommandLine || '';
         const isAggressive = AGGRESSIVE_CLEANUP_PATTERNS.some(p => commandLine.includes(p));
+        const creationMatch = proc.CreationDate?.match(/\/Date\((\d+)\)\//);
+        const ageMinutes = creationMatch
+          ? (now - parseInt(creationMatch[1], 10)) / (1000 * 60)
+          : Number.POSITIVE_INFINITY;
+
+        if (ageMinutes < WINDOWS_STARTUP_GRACE_MINUTES) {
+          logger.debug('SYSTEM', 'Skipping young process during aggressive startup cleanup', {
+            pid,
+            ageMinutes: Math.round(ageMinutes),
+            commandLine: commandLine.substring(0, 80)
+          });
+          continue;
+        }
 
         if (isAggressive) {
           // Kill immediately — no age check
@@ -486,10 +562,7 @@ export async function aggressiveStartupCleanup(): Promise<void> {
           logger.debug('SYSTEM', 'Found orphaned process (aggressive)', { pid, commandLine: commandLine.substring(0, 80) });
         } else {
           // Age-gated: only kill if older than threshold
-          const creationMatch = proc.CreationDate?.match(/\/Date\((\d+)\)\//);
           if (creationMatch) {
-            const creationTime = parseInt(creationMatch[1], 10);
-            const ageMinutes = (now - creationTime) / (1000 * 60);
             if (ageMinutes >= ORPHAN_MAX_AGE_MINUTES) {
               pidsToKill.push(pid);
               logger.debug('SYSTEM', 'Found orphaned process (age-gated)', { pid, ageMinutes: Math.round(ageMinutes) });
@@ -646,17 +719,20 @@ export function spawnDaemon(
       return undefined;
     }
 
-    // Use -EncodedCommand to avoid all shell quoting issues with spaces in paths
-    const psScript = `Start-Process -FilePath '${runtimePath.replace(/'/g, "''")}' -ArgumentList @('${scriptPath.replace(/'/g, "''")}','--daemon') -WindowStyle Hidden`;
-    const encodedCommand = Buffer.from(psScript, 'utf16le').toString('base64');
+    const child = spawn(runtimePath, buildWindowsWorkerDaemonArgs(scriptPath), {
+      cwd: path.dirname(scriptPath),
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+      env
+    });
 
     try {
-      execSync(`powershell -NoProfile -EncodedCommand ${encodedCommand}`, {
-        stdio: 'ignore',
-        windowsHide: true,
-        env
-      });
-      return 0;
+      if (child.pid === undefined) {
+        return undefined;
+      }
+      child.unref();
+      return child.pid;
     } catch (error) {
       // APPROVED OVERRIDE: Windows daemon spawn is best-effort; log and let callers fall back to health checks/retry flow.
       logger.error('SYSTEM', 'Failed to spawn worker daemon on Windows', { runtimePath }, error as Error);

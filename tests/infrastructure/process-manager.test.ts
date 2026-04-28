@@ -15,6 +15,8 @@ import {
   touchPidFile,
   spawnDaemon,
   resolveWorkerRuntimePath,
+  buildWindowsWorkerDaemonArgs,
+  buildWindowsProcessQueryScript,
   runOneTimeChromaMigration,
   type PidInfo
 } from '../../src/services/infrastructure/index.js';
@@ -402,6 +404,14 @@ describe('ProcessManager', () => {
   });
 
   describe('spawnDaemon', () => {
+    it('should build Windows daemon args via bun run', () => {
+      expect(buildWindowsWorkerDaemonArgs('C:\\claude\\worker-service.cjs')).toEqual([
+        'run',
+        'C:\\claude\\worker-service.cjs',
+        '--daemon'
+      ]);
+    });
+
     it('should use setsid on Linux when available', () => {
       // setsid should exist at /usr/bin/setsid on Linux
       if (process.platform === 'win32') return; // Skip on Windows
@@ -438,6 +448,18 @@ describe('ProcessManager', () => {
       if (result !== undefined && result > 0) {
         try { process.kill(result, 'SIGKILL'); } catch { /* already exited */ }
       }
+    });
+  });
+
+  describe('buildWindowsProcessQueryScript', () => {
+    it('should build a WQL filter without broken nested quoting', () => {
+      const script = buildWindowsProcessQueryScript(['worker-service.cjs', 'chroma-mcp'], 1234);
+
+      expect(script).toContain(`ProcessId != 1234`);
+      expect(script).toContain(`CommandLine LIKE '%worker-service.cjs%'`);
+      expect(script).toContain(`CommandLine LIKE '%chroma-mcp%'`);
+      expect(script).not.toContain(`''(`);
+      expect(script).not.toContain(`) AND ProcessId != 1234'`);
     });
   });
 

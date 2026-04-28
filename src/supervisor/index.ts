@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync } from 'fs';
+import { existsSync, readFileSync, rmSync, unlinkSync } from 'fs';
 import { homedir } from 'os';
 import path from 'path';
 import { logger } from '../utils/logger.js';
@@ -21,6 +21,21 @@ interface ValidateWorkerPidOptions {
 }
 
 export type ValidateWorkerPidStatus = 'missing' | 'alive' | 'stale' | 'invalid';
+
+function removeWorkerPidFile(pidFilePath: string): void {
+  try {
+    unlinkSync(pidFilePath);
+    return;
+  } catch (error) {
+    try {
+      rmSync(pidFilePath, { force: true });
+      return;
+    } catch (rmError) {
+      logger.warn('SYSTEM', 'Failed to remove worker PID file', { path: pidFilePath }, rmError as Error);
+    }
+    logger.debug('SYSTEM', 'Worker PID file unlink failed before rm fallback', { path: pidFilePath }, error as Error);
+  }
+}
 
 class Supervisor {
   private readonly registry: ProcessRegistry;
@@ -163,7 +178,7 @@ export function validateWorkerPidFile(options: ValidateWorkerPidOptions = {}): V
     pidInfo = JSON.parse(readFileSync(pidFilePath, 'utf-8')) as PidInfo;
   } catch (error) {
     logger.warn('SYSTEM', 'Failed to parse worker PID file, removing it', { path: pidFilePath }, error as Error);
-    rmSync(pidFilePath, { force: true });
+    removeWorkerPidFile(pidFilePath);
     return 'invalid';
   }
 
@@ -183,6 +198,6 @@ export function validateWorkerPidFile(options: ValidateWorkerPidOptions = {}): V
     port: pidInfo.port,
     startedAt: pidInfo.startedAt
   });
-  rmSync(pidFilePath, { force: true });
+  removeWorkerPidFile(pidFilePath);
   return 'stale';
 }
