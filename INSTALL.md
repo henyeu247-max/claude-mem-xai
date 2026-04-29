@@ -427,7 +427,7 @@ Bây giờ claude-mem-xai sẽ:
 ## 📞 Hỗ Trợ
 
 - **Issues:** https://github.com/henyeu247-max/claude-mem-xai/issues
-- **Original Project:** https://github.com/thedotmack/claude-mem
+- **Original Project:** https://github.com/henyeu247-max/claude-mem-xai
 - **xAI Docs:** https://docs.x.ai/
 
 ---

@@ -1,12 +1,13 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync } from 'fs';
 import { join } from 'path';
 import { homedir, tmpdir } from 'os';
 import type { IDE } from './ide-selection.js';
 
-const MARKETPLACE_DIR = join(homedir(), '.claude', 'plugins', 'marketplaces', 'thedotmack');
+const MARKETPLACE_NAME = 'henyeu247-max';
+const MARKETPLACE_DIR = join(homedir(), '.claude', 'plugins', 'marketplaces', MARKETPLACE_NAME);
 const PLUGINS_DIR = join(homedir(), '.claude', 'plugins');
 const CLAUDE_SETTINGS_PATH = join(homedir(), '.claude', 'settings.json');
 
@@ -30,10 +31,10 @@ function registerMarketplace(): void {
   const knownMarketplacesPath = join(PLUGINS_DIR, 'known_marketplaces.json');
   const knownMarketplaces = readJsonFile(knownMarketplacesPath);
 
-  knownMarketplaces['thedotmack'] = {
+  knownMarketplaces[MARKETPLACE_NAME] = {
     source: {
       source: 'github',
-      repo: 'thedotmack/claude-mem',
+      repo: 'henyeu247-max/claude-mem-xai',
     },
     installLocation: MARKETPLACE_DIR,
     lastUpdated: new Date().toISOString(),
@@ -51,10 +52,10 @@ function registerPlugin(version: string): void {
   if (!installedPlugins.version) installedPlugins.version = 2;
   if (!installedPlugins.plugins) installedPlugins.plugins = {};
 
-  const pluginCachePath = join(PLUGINS_DIR, 'cache', 'thedotmack', 'claude-mem', version);
+  const pluginCachePath = join(PLUGINS_DIR, 'cache', MARKETPLACE_NAME, 'claude-mem', version);
   const now = new Date().toISOString();
 
-  installedPlugins.plugins['claude-mem@thedotmack'] = [
+  installedPlugins.plugins[`claude-mem@${MARKETPLACE_NAME}`] = [
     {
       scope: 'user',
       installPath: pluginCachePath,
@@ -78,7 +79,7 @@ function enablePluginInClaudeSettings(): void {
   const settings = readJsonFile(CLAUDE_SETTINGS_PATH);
 
   if (!settings.enabledPlugins) settings.enabledPlugins = {};
-  settings.enabledPlugins['claude-mem@thedotmack'] = true;
+  settings.enabledPlugins[`claude-mem@${MARKETPLACE_NAME}`] = true;
 
   writeJsonFile(CLAUDE_SETTINGS_PATH, settings);
 }
@@ -97,11 +98,11 @@ export async function runInstallation(selectedIDEs: IDE[]): Promise<void> {
 
   await p.tasks([
     {
-      title: 'Cloning claude-mem repository',
+      title: 'Cloning claude-mem-xai repository',
       task: async (message) => {
         message('Downloading latest release...');
         execSync(
-          `git clone --depth 1 https://github.com/thedotmack/claude-mem.git "${tempDir}"`,
+          `git clone --depth 1 https://github.com/henyeu247-max/claude-mem-xai.git "${tempDir}"`,
           { stdio: 'pipe' },
         );
         return `Repository cloned ${pc.green('OK')}`;
@@ -129,11 +130,16 @@ export async function runInstallation(selectedIDEs: IDE[]): Promise<void> {
         message('Copying files to marketplace directory...');
         ensureDir(MARKETPLACE_DIR);
 
-        // Sync from cloned repo to marketplace dir, excluding .git and lock files
-        execSync(
-          `rsync -a --delete --exclude=.git --exclude=package-lock.json --exclude=bun.lock "${tempDir}/" "${MARKETPLACE_DIR}/"`,
-          { stdio: 'pipe' },
-        );
+        // Cross-platform copy (replaces rsync)
+        const excludePatterns = ['.git', 'package-lock.json', 'bun.lock', 'node_modules', 'dist'];
+        cpSync(tempDir, MARKETPLACE_DIR, {
+          recursive: true,
+          force: true,
+          filter: (src) => {
+            const relative = src.replace(tempDir, '').replace(/^[/\\]/, '');
+            return !excludePatterns.some(p => relative.startsWith(p) || relative.includes(`/${p}/`) || relative.includes(`\\${p}\\`));
+          }
+        });
 
         message('Registering marketplace...');
         registerMarketplace();
@@ -153,9 +159,9 @@ export async function runInstallation(selectedIDEs: IDE[]): Promise<void> {
     },
   ]);
 
-  // Cleanup temp directory (non-critical if it fails)
+  // Cleanup temp directory (cross-platform)
   try {
-    execSync(`rm -rf "${tempDir}"`, { stdio: 'pipe' });
+    rmSync(tempDir, { recursive: true, force: true });
   } catch {
     // Temp dir will be cleaned by OS eventually
   }

@@ -39,7 +39,7 @@ Same as original claude-mem:
 
 ```bash
 # Install via Claude Code
-claude install plugin thedotmack/claude-mem
+claude install plugin henyeu247-max/claude-mem
 
 # Or manually
 git clone https://github.com/henyeu247-max/claude-mem-xai.git

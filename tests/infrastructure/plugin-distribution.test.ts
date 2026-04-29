@@ -88,7 +88,7 @@ describe('Plugin Distribution - hooks.json Integrity', () => {
   it('should include CLAUDE_PLUGIN_ROOT fallback in all hook commands except inline hooks (#1215)', () => {
     const hooksPath = path.join(projectRoot, 'plugin/hooks/hooks.json');
     const parsed = JSON.parse(readFileSync(hooksPath, 'utf-8'));
-    const expectedFallbackPath = '$HOME/.claude/plugins/marketplaces/thedotmack/plugin';
+    const expectedFallbackPath = '$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin';
     const inlineHookEvents = new Set(['SessionEnd']);
 
     for (const [eventName, matchers] of Object.entries(parsed.hooks)) {

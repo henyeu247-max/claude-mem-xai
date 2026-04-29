@@ -1,35 +1,23 @@
 {
-  "description": "Claude-mem memory system hooks",
+  "description": "Claude-mem memory system hooks (cross-platform)",
   "hooks": {
-    "Setup": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; \"$_R/scripts/setup.sh\"",
-            "timeout": 300
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "startup|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; node \"$_R/scripts/smart-install.js\"",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hook-dispatcher.cjs smart-install",
             "timeout": 300
           },
           {
             "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" start",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hook-dispatcher.cjs worker-start",
             "timeout": 60
           },
           {
             "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code context",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hook-dispatcher.cjs context",
             "timeout": 60
           }
         ]
@@ -40,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code session-init",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hook-dispatcher.cjs session-init",
             "timeout": 60
           }
         ]
@@ -52,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code observation",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hook-dispatcher.cjs observation",
             "timeout": 120
           }
         ]
@@ -63,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "_R=\"${CLAUDE_PLUGIN_ROOT}\"; [ -z \"$_R\" ] && _R=\"$HOME/.claude/plugins/marketplaces/henyeu247-max/plugin\"; node \"$_R/scripts/bun-runner.js\" \"$_R/scripts/worker-service.cjs\" hook claude-code summarize",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/hook-dispatcher.cjs summarize",
             "timeout": 120
           }
         ]
@@ -74,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const{sessionId:s}=JSON.parse(d);if(!s){process.exit(0)}const r=require('http').request({hostname:'127.0.0.1',port:37777,path:'/api/sessions/complete',method:'POST',headers:{'Content-Type':'application/json'}},()=>process.exit(0));r.on('error',()=>process.exit(0));r.end(JSON.stringify({contentSessionId:s}));setTimeout(()=>process.exit(0),3000)}catch{process.exit(0)}})\"",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/session-end.cjs",
             "timeout": 5
           }
         ]
