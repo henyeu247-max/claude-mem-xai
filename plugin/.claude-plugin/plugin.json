@@ -1,17 +1,19 @@
 {
-  "name": "claude-mem",
+  "name": "claude-mem-xai",
   "version": "12.4.8",
-  "description": "Persistent memory system for Claude Code - seamlessly preserve context across sessions",
+  "description": "Persistent memory system for Claude Code with xAI Grok integration - fork optimized for xAI API",
   "author": {
-    "name": "Alex Newman"
+    "name": "henyeu247-max"
   },
-  "repository": "https://github.com/thedotmack/claude-mem",
+  "repository": "https://github.com/henyeu247-max/claude-mem-xai",
   "license": "AGPL-3.0",
   "keywords": [
     "memory",
     "context",
     "persistence",
     "hooks",
-    "mcp"
+    "mcp",
+    "xai",
+    "grok"
   ]
 }

@@ -1,11 +1,11 @@
 {
-  "name": "claude-mem",
+  "name": "claude-mem-xai",
   "version": "12.4.8",
-  "description": "Memory compression system for Claude Code - persist context across sessions",
+  "description": "Memory compression system for Claude Code with xAI Grok integration - persist context across sessions",
   "author": {
-    "name": "Alex Newman"
+    "name": "henyeu247-max (forked from Alex Newman)"
   },
-  "repository": "https://github.com/thedotmack/claude-mem",
+  "repository": "https://github.com/henyeu247-max/claude-mem-xai",
   "license": "AGPL-3.0",
   "keywords": [
     "claude",
@@ -18,7 +18,9 @@
     "knowledge-graph",
     "transcript",
     "typescript",
-    "nodejs"
+    "nodejs",
+    "xai",
+    "grok"
   ],
-  "homepage": "https://github.com/thedotmack/claude-mem#readme"
+  "homepage": "https://github.com/henyeu247-max/claude-mem-xai#readme"
 }
