@@ -337,7 +337,7 @@ export function ContextSettingsModal({
             >
               <FormField
                 label="AI Provider"
-                tooltip="Choose between Claude (via Agent SDK) or Gemini (via REST API)"
+                tooltip="Choose between Claude (via Agent SDK), Gemini, OpenRouter, or xAI (via REST API)"
               >
                 <select
                   value={formState.CLAUDE_MEM_PROVIDER || 'claude'}
@@ -346,6 +346,7 @@ export function ContextSettingsModal({
                   <option value="claude">Claude (uses your Claude account)</option>
                   <option value="gemini">Gemini (uses API key)</option>
                   <option value="openrouter">OpenRouter (multi-model)</option>
+                  <option value="xai">xAI (uses Grok models)</option>
                 </select>
               </FormField>
 
@@ -448,6 +449,36 @@ export function ContextSettingsModal({
                       onChange={(e) => updateSetting('CLAUDE_MEM_OPENROUTER_APP_NAME', e.target.value)}
                       placeholder="claude-mem"
                     />
+                  </FormField>
+                </>
+              )}
+
+              {formState.CLAUDE_MEM_PROVIDER === 'xai' && (
+                <>
+                  <FormField
+                    label="xAI API Key"
+                    tooltip="Your xAI API key from console.x.ai (or set XAI_API_KEY env var)"
+                  >
+                    <input
+                      type="password"
+                      value={formState.CLAUDE_MEM_XAI_API_KEY || ''}
+                      onChange={(e) => updateSetting('CLAUDE_MEM_XAI_API_KEY', e.target.value)}
+                      placeholder="Enter xAI API key..."
+                    />
+                  </FormField>
+                  <FormField
+                    label="xAI Model"
+                    tooltip="xAI Grok model for generating observations"
+                  >
+                    <select
+                      value={formState.CLAUDE_MEM_XAI_MODEL || 'grok-4-1-fast-non-reasoning'}
+                      onChange={(e) => updateSetting('CLAUDE_MEM_XAI_MODEL', e.target.value)}
+                    >
+                      <option value="grok-4-1-fast-non-reasoning">grok-4-1-fast-non-reasoning (fastest)</option>
+                      <option value="grok-4-1-fast">grok-4-1-fast (with reasoning)</option>
+                      <option value="grok-4-1">grok-4-1 (balanced)</option>
+                      <option value="grok-4-1-turbo">grok-4-1-turbo (highest quality)</option>
+                    </select>
                   </FormField>
                 </>
               )}
