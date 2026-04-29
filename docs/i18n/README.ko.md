@@ -3,11 +3,11 @@
 ---
 <h1 align="center">
   <br>
-  <a href="https://github.com/thedotmack/claude-mem">
+  <a href="https://github.com/henyeu247-max/claude-mem-xai">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/claude-mem-logo-for-dark-mode.webp">
-      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/claude-mem-logo-for-light-mode.webp">
-      <img src="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/claude-mem-logo-for-light-mode.webp" alt="Claude-Mem" width="400">
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/claude-mem-logo-for-dark-mode.webp">
+      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/claude-mem-logo-for-light-mode.webp">
+      <img src="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/claude-mem-logo-for-light-mode.webp" alt="Claude-Mem" width="400">
     </picture>
   </a>
   <br>
@@ -58,7 +58,7 @@
   <a href="package.json">
     <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node">
   </a>
-  <a href="https://github.com/thedotmack/awesome-claude-code">
+  <a href="https://github.com/henyeu247-max/claude-mem-xai">
     <img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Claude Code">
   </a>
 </p>
@@ -66,9 +66,9 @@
 <p align="center">
   <a href="https://trendshift.io/repositories/15496" target="_blank">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/trendshift-badge-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/trendshift-badge.svg">
-      <img src="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/trendshift-badge.svg" alt="thedotmack/claude-mem | Trendshift" width="250" height="55"/>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/trendshift-badge-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/trendshift-badge.svg">
+      <img src="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/trendshift-badge.svg" alt="henyeu247-max/claude-mem-xai | Trendshift" width="250" height="55"/>
     </picture>
   </a>
 </p>
@@ -76,9 +76,9 @@
 <br>
 
 <p align="center">
-  <a href="https://github.com/thedotmack/claude-mem">
+  <a href="https://github.com/henyeu247-max/claude-mem-xai">
     <picture>
-      <img src="https://raw.githubusercontent.com/thedotmack/claude-mem/main/docs/public/cm-preview.gif" alt="Claude-Mem Preview" width="800">
+      <img src="https://raw.githubusercontent.com/henyeu247-max/claude-mem-xai/main/docs/public/cm-preview.gif" alt="Claude-Mem Preview" width="800">
     </picture>
   </a>
 </p>
@@ -104,7 +104,7 @@
 터미널에서 새 Claude Code 세션을 시작하고 다음 명령을 입력하세요:
 
 ```
-> /plugin marketplace add thedotmack/claude-mem
+> /plugin marketplace add henyeu247-max/claude-mem-xai
 
 > /plugin install claude-mem
 ```
@@ -255,7 +255,7 @@ Endless Mode 및 사용 방법에 대한 자세한 내용은 **[베타 기능 �
 자동화된 생성기로 포괄적인 버그 보고서를 작성하세요:
 
 ```bash
-cd ~/.claude/plugins/marketplaces/thedotmack
+cd ~/.claude/plugins/marketplaces/henyeu247-max
 npm run bug-report
 ```
 
@@ -277,7 +277,7 @@ npm run bug-report
 
 이 프로젝트는 **GNU Affero General Public License v3.0** (AGPL-3.0)에 따라 라이선스가 부여됩니다.
 
-Copyright (C) 2025 Alex Newman (@thedotmack). All rights reserved.
+Copyright (C) 2025 Alex Newman (@henyeu247-max). All rights reserved.
 
 전체 세부 정보는 [LICENSE](LICENSE) 파일을 참조하세요.
 
@@ -295,9 +295,9 @@ Copyright (C) 2025 Alex Newman (@thedotmack). All rights reserved.
 ## 지원
 
 - **문서**: [docs/](docs/)
-- **이슈**: [GitHub Issues](https://github.com/thedotmack/claude-mem/issues)
-- **저장소**: [github.com/thedotmack/claude-mem](https://github.com/thedotmack/claude-mem)
-- **작성자**: Alex Newman ([@thedotmack](https://github.com/thedotmack))
+- **이슈**: [GitHub Issues](https://github.com/henyeu247-max/claude-mem-xai/issues)
+- **저장소**: [github.com/henyeu247-max/claude-mem-xai](https://github.com/henyeu247-max/claude-mem-xai)
+- **작성자**: Alex Newman ([@henyeu247-max](https://github.com/henyeu247-max))
 
 ---
 
