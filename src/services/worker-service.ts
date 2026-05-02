@@ -106,7 +106,7 @@ import {
 import { DatabaseManager } from './worker/DatabaseManager.js';
 import { SessionManager } from './worker/SessionManager.js';
 import { SSEBroadcaster } from './worker/SSEBroadcaster.js';
-import { XAIAgent } from './worker/XAIAgent.js';
+import { NVIDIAAgent } from './worker/NVIDIAAgent.js';
 import { PaginationHelper } from './worker/PaginationHelper.js';
 import { SettingsManager } from './worker/SettingsManager.js';
 import { SearchManager } from './worker/SearchManager.js';
@@ -164,7 +164,7 @@ export class WorkerService {
   private dbManager: DatabaseManager;
   private sessionManager: SessionManager;
   private sseBroadcaster: SSEBroadcaster;
-  private xaiAgent: XAIAgent;
+  private nvidiaAgent: NVIDIAAgent;
   private paginationHelper: PaginationHelper;
   private settingsManager: SettingsManager;
   private sessionEventBroadcaster: SessionEventBroadcaster;
@@ -203,7 +203,7 @@ export class WorkerService {
     this.dbManager = new DatabaseManager();
     this.sessionManager = new SessionManager(this.dbManager);
     this.sseBroadcaster = new SSEBroadcaster();
-    this.xaiAgent = new XAIAgent(this.dbManager, this.sessionManager);
+    this.nvidiaAgent = new NVIDIAAgent(this.dbManager, this.sessionManager);
 
     this.paginationHelper = new PaginationHelper(this.dbManager);
     this.settingsManager = new SettingsManager(this.dbManager);
@@ -230,7 +230,7 @@ export class WorkerService {
       onRestart: () => this.shutdown(),
       workerPath: __filename,
       getAiStatus: () => {
-        let provider = 'xai';
+        let provider = 'nvidia';
         return {
           provider,
           authMethod: getAuthMethodDescription(),
@@ -307,7 +307,7 @@ export class WorkerService {
 
     // Standard routes (registered AFTER guard middleware)
     this.server.registerRoutes(new ViewerRoutes(this.sseBroadcaster, this.dbManager, this.sessionManager));
-    this.server.registerRoutes(new SessionRoutes(this.sessionManager, this.dbManager, this.xaiAgent, this.sessionEventBroadcaster, this));
+    this.server.registerRoutes(new SessionRoutes(this.sessionManager, this.dbManager, this.nvidiaAgent, this.sessionEventBroadcaster, this));
     this.server.registerRoutes(new DataRoutes(this.paginationHelper, this.dbManager, this.sessionManager, this.sseBroadcaster, this, this.startTime));
     this.server.registerRoutes(new SettingsRoutes(this.settingsManager));
     this.server.registerRoutes(new LogsRoutes());
@@ -515,8 +515,8 @@ export class WorkerService {
    * Get the appropriate agent based on provider settings.
    * Same logic as SessionRoutes.getActiveAgent() for consistency.
    */
-  private getActiveAgent(): XAIAgent {
-    return this.xaiAgent;
+  private getActiveAgent(): NVIDIAAgent {
+    return this.nvidiaAgent;
   }
 
   /**

@@ -91,11 +91,11 @@ export class SettingsRoutes extends BaseRouteHandler {
       // AI Provider Configuration
       'CLAUDE_MEM_PROVIDER',
       // OpenRouter Configuration
-      // xAI Configuration
-      'CLAUDE_MEM_XAI_API_KEY',
-      'CLAUDE_MEM_XAI_MODEL',
-      'CLAUDE_MEM_XAI_MAX_CONTEXT_MESSAGES',
-      'CLAUDE_MEM_XAI_MAX_TOKENS',
+      // NVIDIA NIM Configuration
+      'CLAUDE_MEM_NVIDIA_API_KEY',
+      'CLAUDE_MEM_NVIDIA_MODEL',
+      'CLAUDE_MEM_NVIDIA_MAX_CONTEXT_MESSAGES',
+      'CLAUDE_MEM_NVIDIA_MAX_TOKENS',
       // System Configuration
       'CLAUDE_MEM_DATA_DIR',
       'CLAUDE_MEM_LOG_LEVEL',
@@ -229,9 +229,9 @@ export class SettingsRoutes extends BaseRouteHandler {
   private validateSettings(settings: any): { valid: boolean; error?: string } {
     // Validate CLAUDE_MEM_PROVIDER
     if (settings.CLAUDE_MEM_PROVIDER) {
-    const validProviders = ['xai'];
+    const validProviders = ['nvidia'];
     if (!validProviders.includes(settings.CLAUDE_MEM_PROVIDER)) {
-      return { valid: false, error: 'CLAUDE_MEM_PROVIDER must be "xai"' };
+      return { valid: false, error: 'CLAUDE_MEM_PROVIDER must be "nvidia"' };
       }
     }
 

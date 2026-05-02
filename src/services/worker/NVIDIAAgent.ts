@@ -1,11 +1,11 @@
 /**
- * XAIAgent: xAI-based observation extraction
+ * NVIDIAAgent: NVIDIA NIM-based observation extraction
  *
- * Alternative to SDKAgent that uses xAI's unified API
- * for accessing 100+ models from different providers.
+ * Uses NVIDIA NIM API (OpenAI-compatible) for accessing 100+ models
+ * from different providers hosted on NVIDIA infrastructure.
  *
  * Responsibility:
- * - Call xAI REST API for observation extraction
+ * - Call NVIDIA NIM REST API for observation extraction
  * - Parse XML responses (same format as Claude/Gemini)
  * - Sync to database and Chroma
  * - Support dynamic model selection across providers
@@ -28,8 +28,8 @@ import {
   type WorkerRef
 } from './agents/index.js';
 
-// xAI API endpoint
-const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
+// NVIDIA NIM API endpoint (OpenAI-compatible)
+const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 // Context window management constants (defaults, overridable via settings)
 const DEFAULT_MAX_CONTEXT_MESSAGES = 20;  // Maximum messages to keep in conversation history
@@ -42,7 +42,7 @@ interface OpenAIMessage {
   content: string;
 }
 
-interface xAIResponse {
+interface NVIDIAResponse {
   choices?: Array<{
     message?: {
       role?: string;
@@ -61,7 +61,7 @@ interface xAIResponse {
   };
 }
 
-export class XAIAgent {
+export class NVIDIAAgent {
   private dbManager: DatabaseManager;
   private sessionManager: SessionManager;
   private fallbackAgent: FallbackAgent | null = null;
@@ -72,7 +72,7 @@ export class XAIAgent {
   }
 
   /**
-   * Set the fallback agent (Claude SDK) for when xAI API fails
+   * Set the fallback agent (Claude SDK) for when NVIDIA API fails
    * Must be set after construction to avoid circular dependency
    */
   setFallbackAgent(agent: FallbackAgent): void {
@@ -80,24 +80,24 @@ export class XAIAgent {
   }
 
   /**
-   * Start xAI agent for a session
+   * Start NVIDIA agent for a session
    * Uses multi-turn conversation to maintain context across messages
    */
   async startSession(session: ActiveSession, worker?: WorkerRef): Promise<void> {
     try {
-      // Get xAI configuration
-      const { apiKey, model, siteUrl, appName } = this.getXAIConfig();
+      // Get NVIDIA configuration
+      const { apiKey, model } = this.getNVIDIAConfig();
 
       if (!apiKey) {
-        throw new Error('xAI API key not configured. Set CLAUDE_MEM_XAI_API_KEY in settings or OPENROUTER_API_KEY environment variable.');
+        throw new Error('NVIDIA API key not configured. Set CLAUDE_MEM_NVIDIA_API_KEY in settings or NVIDIA_API_KEY environment variable. Get your key at https://build.nvidia.com');
       }
 
-      // Generate synthetic memorySessionId (xAI is stateless, doesn't return session IDs)
+      // Generate synthetic memorySessionId (NVIDIA NIM is stateless, doesn't return session IDs)
       if (!session.memorySessionId) {
-        const syntheticMemorySessionId = `openrouter-${session.contentSessionId}-${Date.now()}`;
+        const syntheticMemorySessionId = `nvidia-${session.contentSessionId}-${Date.now()}`;
         session.memorySessionId = syntheticMemorySessionId;
         this.dbManager.getSessionStore().updateMemorySessionId(session.sessionDbId, syntheticMemorySessionId);
-        logger.info('SESSION', `MEMORY_ID_GENERATED | sessionDbId=${session.sessionDbId} | provider=xAI`);
+        logger.info('SESSION', `MEMORY_ID_GENERATED | sessionDbId=${session.sessionDbId} | provider=nvidia`);
       }
 
       // Load active mode
@@ -108,14 +108,11 @@ export class XAIAgent {
         ? buildInitPrompt(session.project, session.contentSessionId, session.userPrompt, mode)
         : buildContinuationPrompt(session.userPrompt, session.lastPromptNumber, session.contentSessionId, mode);
 
-      // Add to conversation history and query xAI with full context
+      // Add to conversation history and query NVIDIA with full context
       session.conversationHistory.push({ role: 'user', content: initPrompt });
-      const initResponse = await this.queryxAIMultiTurn(session.conversationHistory, apiKey, model, siteUrl, appName);
+      const initResponse = await this.queryNVIDIAMultiTurn(session.conversationHistory, apiKey, model);
 
       if (initResponse.content) {
-        // Add response to conversation history
-        // session.conversationHistory.push({ role: 'assistant', content: initResponse.content });
-
         // Track token usage
         const tokensUsed = initResponse.tokensUsed || 0;
         session.cumulativeInputTokens += Math.floor(tokensUsed * 0.7);  // Rough estimate
@@ -130,11 +127,11 @@ export class XAIAgent {
           worker,
           tokensUsed,
           null,
-          'xAI',
+          'NVIDIA',
           undefined  // No lastCwd yet - before message processing
         );
       } else {
-        logger.error('SDK', 'Empty xAI init response - session may lack context', {
+        logger.error('SDK', 'Empty NVIDIA init response - session may lack context', {
           sessionId: session.sessionDbId,
           model
         });
@@ -178,15 +175,12 @@ export class XAIAgent {
             cwd: message.cwd
           });
 
-          // Add to conversation history and query xAI with full context
+          // Add to conversation history and query NVIDIA with full context
           session.conversationHistory.push({ role: 'user', content: obsPrompt });
-          const obsResponse = await this.queryxAIMultiTurn(session.conversationHistory, apiKey, model, siteUrl, appName);
+          const obsResponse = await this.queryNVIDIAMultiTurn(session.conversationHistory, apiKey, model);
 
           let tokensUsed = 0;
           if (obsResponse.content) {
-            // Add response to conversation history
-            // session.conversationHistory.push({ role: 'assistant', content: obsResponse.content });
-
             tokensUsed = obsResponse.tokensUsed || 0;
             session.cumulativeInputTokens += Math.floor(tokensUsed * 0.7);
             session.cumulativeOutputTokens += Math.floor(tokensUsed * 0.3);
@@ -201,7 +195,7 @@ export class XAIAgent {
             worker,
             tokensUsed,
             originalTimestamp,
-            'xAI',
+            'NVIDIA',
             lastCwd
           );
 
@@ -220,15 +214,12 @@ export class XAIAgent {
             last_assistant_message: message.last_assistant_message || ''
           }, mode);
 
-          // Add to conversation history and query xAI with full context
+          // Add to conversation history and query NVIDIA with full context
           session.conversationHistory.push({ role: 'user', content: summaryPrompt });
-          const summaryResponse = await this.queryxAIMultiTurn(session.conversationHistory, apiKey, model, siteUrl, appName);
+          const summaryResponse = await this.queryNVIDIAMultiTurn(session.conversationHistory, apiKey, model);
 
           let tokensUsed = 0;
           if (summaryResponse.content) {
-            // Add response to conversation history
-            // session.conversationHistory.push({ role: 'assistant', content: summaryResponse.content });
-
             tokensUsed = summaryResponse.tokensUsed || 0;
             session.cumulativeInputTokens += Math.floor(tokensUsed * 0.7);
             session.cumulativeOutputTokens += Math.floor(tokensUsed * 0.3);
@@ -243,7 +234,7 @@ export class XAIAgent {
             worker,
             tokensUsed,
             originalTimestamp,
-            'xAI',
+            'NVIDIA',
             lastCwd
           );
         }
@@ -251,7 +242,7 @@ export class XAIAgent {
 
       // Mark session complete
       const sessionDuration = Date.now() - session.startTime;
-      logger.success('SDK', 'xAI agent completed', {
+      logger.success('SDK', 'NVIDIA agent completed', {
         sessionId: session.sessionDbId,
         duration: `${(sessionDuration / 1000).toFixed(1)}s`,
         historyLength: session.conversationHistory.length,
@@ -260,24 +251,23 @@ export class XAIAgent {
 
     } catch (error: unknown) {
       if (isAbortError(error)) {
-        logger.warn('SDK', 'xAI agent aborted', { sessionId: session.sessionDbId });
+        logger.warn('SDK', 'NVIDIA agent aborted', { sessionId: session.sessionDbId });
         throw error;
       }
 
       // Check if we should fall back to Claude
       if (shouldFallbackToClaude(error) && this.fallbackAgent) {
-        logger.warn('SDK', 'xAI API failed, falling back to Claude SDK', {
+        logger.warn('SDK', 'NVIDIA API failed, falling back to Claude SDK', {
           sessionDbId: session.sessionDbId,
           error: error instanceof Error ? error.message : String(error),
           historyLength: session.conversationHistory.length
         });
 
         // Fall back to Claude - it will use the same session with shared conversationHistory
-        // Note: With claim-and-delete queue pattern, messages are already deleted on claim
         return this.fallbackAgent.startSession(session, worker);
       }
 
-      logger.failure('SDK', 'xAI agent error', { sessionDbId: session.sessionDbId }, error as Error);
+      logger.failure('SDK', 'NVIDIA agent error', { sessionDbId: session.sessionDbId }, error as Error);
       throw error;
     }
   }
@@ -296,8 +286,8 @@ export class XAIAgent {
   private truncateHistory(history: ConversationMessage[]): ConversationMessage[] {
     const settings = SettingsDefaultsManager.loadFromFile(USER_SETTINGS_PATH);
 
-    const MAX_CONTEXT_MESSAGES = parseInt(settings.CLAUDE_MEM_XAI_MAX_CONTEXT_MESSAGES) || DEFAULT_MAX_CONTEXT_MESSAGES;
-    const MAX_ESTIMATED_TOKENS = parseInt(settings.CLAUDE_MEM_XAI_MAX_TOKENS) || DEFAULT_MAX_ESTIMATED_TOKENS;
+    const MAX_CONTEXT_MESSAGES = parseInt(settings.CLAUDE_MEM_NVIDIA_MAX_CONTEXT_MESSAGES) || DEFAULT_MAX_CONTEXT_MESSAGES;
+    const MAX_ESTIMATED_TOKENS = parseInt(settings.CLAUDE_MEM_NVIDIA_MAX_TOKENS) || DEFAULT_MAX_ESTIMATED_TOKENS;
 
     if (history.length <= MAX_CONTEXT_MESSAGES) {
       // Check token count even if message count is ok
@@ -345,15 +335,13 @@ export class XAIAgent {
   }
 
   /**
-   * Query xAI via REST API with full conversation history (multi-turn)
+   * Query NVIDIA NIM via REST API with full conversation history (multi-turn)
    * Sends the entire conversation context for coherent responses
    */
-  private async queryxAIMultiTurn(
+  private async queryNVIDIAMultiTurn(
     history: ConversationMessage[],
     apiKey: string,
-    model: string,
-    siteUrl?: string,
-    appName?: string
+    model: string
   ): Promise<{ content: string; tokensUsed?: number }> {
     // Truncate history to prevent runaway costs
     const truncatedHistory = this.truncateHistory(history);
@@ -361,18 +349,16 @@ export class XAIAgent {
     const totalChars = truncatedHistory.reduce((sum, m) => sum + m.content.length, 0);
     const estimatedTokens = this.estimateTokens(truncatedHistory.map(m => m.content).join(''));
 
-    logger.debug('SDK', `Querying xAI multi-turn (${model})`, {
+    logger.debug('SDK', `Querying NVIDIA NIM multi-turn (${model})`, {
       turns: truncatedHistory.length,
       totalChars,
       estimatedTokens
     });
 
-    const response = await fetch(XAI_API_URL, {
+    const response = await fetch(NVIDIA_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        
-        
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -385,18 +371,18 @@ export class XAIAgent {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`xAI API error: ${response.status} - ${errorText}`);
+      throw new Error(`NVIDIA NIM API error: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json() as xAIResponse;
+    const data = await response.json() as NVIDIAResponse;
 
     // Check for API error in response body
     if (data.error) {
-      throw new Error(`xAI API error: ${data.error.code} - ${data.error.message}`);
+      throw new Error(`NVIDIA NIM API error: ${data.error.code} - ${data.error.message}`);
     }
 
     if (!data.choices?.[0]?.message?.content) {
-      logger.error('SDK', 'Empty response from xAI');
+      logger.error('SDK', 'Empty response from NVIDIA NIM');
       return { content: '' };
     }
 
@@ -407,23 +393,19 @@ export class XAIAgent {
     if (tokensUsed) {
       const inputTokens = data.usage?.prompt_tokens || 0;
       const outputTokens = data.usage?.completion_tokens || 0;
-      // Token usage (cost varies by model - many xAI models are free)
-      const estimatedCost = (inputTokens / 1000000 * 3) + (outputTokens / 1000000 * 15);
 
-      logger.info('SDK', 'xAI API usage', {
+      logger.info('SDK', 'NVIDIA NIM API usage', {
         model,
         inputTokens,
         outputTokens,
         totalTokens: tokensUsed,
-        estimatedCostUSD: estimatedCost.toFixed(4),
         messagesInContext: truncatedHistory.length
       });
 
       // Warn if costs are getting high
       if (tokensUsed > 50000) {
         logger.warn('SDK', 'High token usage detected - consider reducing context', {
-          totalTokens: tokensUsed,
-          estimatedCost: estimatedCost.toFixed(4)
+          totalTokens: tokensUsed
         });
       }
     }
@@ -432,43 +414,36 @@ export class XAIAgent {
   }
 
   /**
-   * Get xAI configuration from settings or environment
-   * Issue #733: Uses centralized ~/.claude-mem/.env for credentials, not random project .env files
+   * Get NVIDIA configuration from settings or environment
    */
-  private getXAIConfig(): { apiKey: string; model: string } {
+  private getNVIDIAConfig(): { apiKey: string; model: string } {
     const settingsPath = USER_SETTINGS_PATH;
     const settings = SettingsDefaultsManager.loadFromFile(settingsPath);
 
     // API key: check settings first, then centralized claude-mem .env (NOT process.env)
-    // This prevents Issue #733 where random project .env files could interfere
-    const apiKey = settings.CLAUDE_MEM_XAI_API_KEY || getCredential('XAI_API_KEY') || '';
+    const apiKey = settings.CLAUDE_MEM_NVIDIA_API_KEY || getCredential('NVIDIA_API_KEY') || '';
 
-    // Model: from settings or default
-    const model = settings.CLAUDE_MEM_XAI_MODEL || 'grok-4-1-fast-non-reasoning';
+    // Model: from settings or default (Nemotron Super 49B v1.5 - best balance of speed + quality)
+    const model = settings.CLAUDE_MEM_NVIDIA_MODEL || 'nvidia/llama-3.3-nemotron-super-49b-v1.5';
 
-    // Optional analytics headers
-    const siteUrl = settings.CLAUDE_MEM_OPENROUTER_SITE_URL || '';
-    const appName = settings.CLAUDE_MEM_OPENROUTER_APP_NAME || 'claude-mem';
-
-    return { apiKey, model, siteUrl, appName };
+    return { apiKey, model };
   }
 }
 
 /**
- * Check if xAI is available (has API key configured)
- * Issue #733: Uses centralized ~/.claude-mem/.env, not random project .env files
+ * Check if NVIDIA is available (has API key configured)
  */
-export function isXAIAvailable(): boolean {
+export function isNVIDIAAvailable(): boolean {
   const settingsPath = USER_SETTINGS_PATH;
   const settings = SettingsDefaultsManager.loadFromFile(settingsPath);
-  return !!(settings.CLAUDE_MEM_XAI_API_KEY || getCredential('XAI_API_KEY'));
+  return !!(settings.CLAUDE_MEM_NVIDIA_API_KEY || getCredential('NVIDIA_API_KEY'));
 }
 
 /**
- * Check if xAI is the selected provider
+ * Check if NVIDIA is the selected provider
  */
-export function isXAISelected(): boolean {
+export function isNVIDIASelected(): boolean {
   const settingsPath = USER_SETTINGS_PATH;
   const settings = SettingsDefaultsManager.loadFromFile(settingsPath);
-  return settings.CLAUDE_MEM_PROVIDER === 'xai';
+  return settings.CLAUDE_MEM_PROVIDER === 'nvidia';
 }

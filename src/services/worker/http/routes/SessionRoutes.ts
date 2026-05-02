@@ -11,7 +11,7 @@ import { logger } from '../../../../utils/logger.js';
 import { stripMemoryTagsFromJson, stripMemoryTagsFromPrompt } from '../../../../utils/tag-stripping.js';
 import { SessionManager } from '../../SessionManager.js';
 import { DatabaseManager } from '../../DatabaseManager.js';
-import { XAIAgent } from '../../XAIAgent.js';
+import { NVIDIAAgent } from '../../NVIDIAAgent.js';
 import type { WorkerService } from '../../../worker-service.js';
 import { BaseRouteHandler } from '../BaseRouteHandler.js';
 import { SessionEventBroadcaster } from '../../events/SessionEventBroadcaster.js';
@@ -29,7 +29,7 @@ export class SessionRoutes extends BaseRouteHandler {
   constructor(
     private sessionManager: SessionManager,
     private dbManager: DatabaseManager,
-    private xaiAgent: XAIAgent,
+    private nvidiaAgent: NVIDIAAgent,
     private eventBroadcaster: SessionEventBroadcaster,
     private workerService: WorkerService
   ) {
@@ -47,14 +47,14 @@ export class SessionRoutes extends BaseRouteHandler {
    * Note: Session linking via contentSessionId allows provider switching mid-session.
    * The conversationHistory on ActiveSession maintains context across providers.
    */
-  private getActiveAgent(): XAIAgent {
-    return this.xaiAgent;
+  private getActiveAgent(): NVIDIAAgent {
+    return this.nvidiaAgent;
   }
   /**
    * Get the currently selected provider name
    */
-  private getSelectedProvider(): 'xai' {
-    return 'xai';
+  private getSelectedProvider(): 'nvidia' {
+    return 'nvidia';
   }
 
   /**
@@ -125,7 +125,7 @@ export class SessionRoutes extends BaseRouteHandler {
    */
   private startGeneratorWithProvider(
     session: ReturnType<typeof this.sessionManager.getSession>,
-    provider: 'claude' | 'gemini' | 'openrouter',
+    provider: 'nvidia' | 'claude' | 'gemini' | 'openrouter',
     source: string
   ): void {
     if (!session) return;
@@ -140,8 +140,8 @@ export class SessionRoutes extends BaseRouteHandler {
       session.abortController = new AbortController();
     }
 
-    const agent = this.xaiAgent;
-    const agentName = 'xAI';
+    const agent = this.nvidiaAgent;
+    const agentName = 'NVIDIA';
 
     // Use database count for accurate telemetry (in-memory array is always empty due to FK constraint fix)
     const pendingStore = this.sessionManager.getPendingMessageStore();
