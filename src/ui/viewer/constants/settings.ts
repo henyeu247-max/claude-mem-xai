@@ -5,19 +5,21 @@
 export const DEFAULT_SETTINGS = {
   CLAUDE_MEM_MODEL: 'claude-sonnet-4-5',
   CLAUDE_MEM_CONTEXT_OBSERVATIONS: '50',
-  CLAUDE_MEM_WORKER_PORT: '37777',
+  CLAUDE_MEM_WORKER_PORT: '37778',
   CLAUDE_MEM_WORKER_HOST: '127.0.0.1',
 
   // AI Provider Configuration
   CLAUDE_MEM_PROVIDER: 'nvidia',
+  CLAUDE_MEM_XAI_API_KEY: '',
+  CLAUDE_MEM_XAI_MODEL: 'grok-4-1-fast-non-reasoning',
+  CLAUDE_MEM_NVIDIA_API_KEY: '',
+  CLAUDE_MEM_NVIDIA_MODEL: 'openai/gpt-oss-120b',
   CLAUDE_MEM_GEMINI_API_KEY: '',
   CLAUDE_MEM_GEMINI_MODEL: 'gemini-2.5-flash-lite',
   CLAUDE_MEM_OPENROUTER_API_KEY: '',
   CLAUDE_MEM_OPENROUTER_MODEL: 'xiaomi/mimo-v2-flash:free',
   CLAUDE_MEM_OPENROUTER_SITE_URL: '',
   CLAUDE_MEM_OPENROUTER_APP_NAME: 'claude-mem',
-  CLAUDE_MEM_NVIDIA_API_KEY: '',
-  CLAUDE_MEM_NVIDIA_MODEL: 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
   CLAUDE_MEM_GEMINI_RATE_LIMITING_ENABLED: 'true',
 
   // Token Economics — match SettingsDefaultsManager defaults (off by default to keep context lean)

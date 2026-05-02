@@ -340,98 +340,77 @@ export function ContextSettingsModal({
                     tooltip="Select an NVIDIA NIM model. Larger models = better quality, slower speed."
                   >
                     <select
-                      value={formState.CLAUDE_MEM_NVIDIA_MODEL || 'nvidia/llama-3.3-nemotron-super-49b-v1.5'}
+                      value={formState.CLAUDE_MEM_NVIDIA_MODEL || 'openai/gpt-oss-120b'}
                       onChange={(e) => updateSetting('CLAUDE_MEM_NVIDIA_MODEL', e.target.value)}
                     >
-                      <optgroup label="--- NVIDIA Nemotron (Recommended) ---">
-                        <option value="nvidia/llama-3.3-nemotron-super-49b-v1.5">nvidia/llama-3.3-nemotron-super-49b-v1.5</option>
-                        <option value="nvidia/llama-3.3-nemotron-super-49b-v1">nvidia/llama-3.3-nemotron-super-49b-v1</option>
-                        <option value="nvidia/llama-3.1-nemotron-70b-instruct">nvidia/llama-3.1-nemotron-70b-instruct</option>
-                        <option value="nvidia/llama-3.1-nemotron-51b-instruct">nvidia/llama-3.1-nemotron-51b-instruct</option>
-                        <option value="nvidia/llama-3.1-nemotron-ultra-253b-v1">nvidia/llama-3.1-nemotron-ultra-253b-v1</option>
-                        <option value="nvidia/nemotron-3-super-120b-a12b">nvidia/nemotron-3-super-120b-a12b</option>
-                        <option value="nvidia/nemotron-3-nano-30b-a3b">nvidia/nemotron-3-nano-30b-a3b</option>
-                        <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning">nvidia/nemotron-3-nano-omni-30b-a3b-reasoning</option>
-                        <option value="nvidia/nvidia-nemotron-nano-9b-v2">nvidia/nvidia-nemotron-nano-9b-v2</option>
-                        <option value="nvidia/nemotron-mini-4b-instruct">nvidia/nemotron-mini-4b-instruct</option>
-                        <option value="nvidia/llama-3.1-nemotron-nano-8b-v1">nvidia/llama-3.1-nemotron-nano-8b-v1</option>
-                        <option value="nvidia/nemotron-nano-3-30b-a3b">nvidia/nemotron-nano-3-30b-a3b</option>
-                        <option value="nvidia/mistral-nemo-minitron-8b-8k-instruct">nvidia/mistral-nemo-minitron-8b-8k-instruct</option>
+                      <optgroup label="⚡ Fastest (tested, &lt;2s)">
+                        <option value="openai/gpt-oss-20b">gpt-oss-20b (~1s, 194 tok/s) ⭐ FASTEST</option>
+                        <option value="openai/gpt-oss-120b">gpt-oss-120b (~1.4s, 74 tok/s)</option>
+                        <option value="nvidia/nemotron-3-nano-30b-a3b">nemotron-3-nano-30b (~1.4s, 78 tok/s)</option>
                       </optgroup>
-                      <optgroup label="--- DeepSeek (Best Value) ---">
-                        <option value="deepseek-ai/deepseek-v4-flash">deepseek-ai/deepseek-v4-flash</option>
-                        <option value="deepseek-ai/deepseek-v4-pro">deepseek-ai/deepseek-v4-pro</option>
-                        <option value="deepseek-ai/deepseek-v3.2">deepseek-ai/deepseek-v3.2</option>
-                        <option value="deepseek-ai/deepseek-v3.1-terminus">deepseek-ai/deepseek-v3.1-terminus</option>
-                        <option value="deepseek-ai/deepseek-coder-6.7b-instruct">deepseek-ai/deepseek-coder-6.7b-instruct</option>
+                      <optgroup label="🚀 Fast (tested, 1.5-3s)">
+                        <option value="mistralai/mistral-medium-3.5-128b">mistral-medium-3.5-128b (~1.6s, 44 tok/s)</option>
+                        <option value="qwen/qwen3.5-122b-a10b">qwen3.5-122b (~2.7s, 36 tok/s)</option>
                       </optgroup>
-                      <optgroup label="--- Qwen (Code Specialists) ---">
-                        <option value="qwen/qwen3-coder-480b-a35b-instruct">qwen/qwen3-coder-480b-a35b-instruct</option>
-                        <option value="qwen/qwen2.5-coder-32b-instruct">qwen/qwen2.5-coder-32b-instruct</option>
-                        <option value="qwen/qwen3.5-397b-a17b">qwen/qwen3.5-397b-a17b</option>
-                        <option value="qwen/qwen3.5-122b-a10b">qwen/qwen3.5-122b-a10b</option>
-                        <option value="qwen/qwen3-next-80b-a3b-instruct">qwen/qwen3-next-80b-a3b-instruct</option>
+                      <optgroup label="✅ Good (tested, 4-6s)">
+                        <option value="nvidia/nemotron-3-super-120b-a12b">nemotron-3-super-120b (~4s, 64 tok/s)</option>
+                        <option value="meta/llama-3.1-405b-instruct">llama-3.1-405b (~5s, 13 tok/s)</option>
+                        <option value="nvidia/nvidia-nemotron-nano-9b-v2">nemotron-nano-9b (~5s, 49 tok/s)</option>
+                        <option value="deepseek-ai/deepseek-v4-pro">deepseek-v4-pro (~5.3s, 15 tok/s)</option>
+                        <option value="qwen/qwen3.5-397b-a17b">qwen3.5-397b (~5.7s, 16 tok/s)</option>
                       </optgroup>
-                      <optgroup label="--- Meta Llama ---">
-                        <option value="meta/llama-3.3-70b-instruct">meta/llama-3.3-70b-instruct</option>
-                        <option value="meta/llama-3.1-70b-instruct">meta/llama-3.1-70b-instruct</option>
-                        <option value="meta/llama-3.1-405b-instruct">meta/llama-3.1-405b-instruct</option>
-                        <option value="meta/llama-3.1-8b-instruct">meta/llama-3.1-8b-instruct</option>
-                        <option value="meta/llama-4-maverick-17b-128e-instruct">meta/llama-4-maverick-17b-128e-instruct</option>
-                        <option value="meta/llama-3.2-3b-instruct">meta/llama-3.2-3b-instruct</option>
-                        <option value="meta/llama-3.2-1b-instruct">meta/llama-3.2-1b-instruct</option>
-                        <option value="meta/codellama-70b">meta/codellama-70b</option>
-                        <option value="meta/llama2-70b">meta/llama2-70b</option>
+                      <optgroup label="🐢 Slower (tested, 7-11s)">
+                        <option value="google/gemma-4-31b-it">gemma-4-31b (~7.8s, 9 tok/s)</option>
+                        <option value="deepseek-ai/deepseek-v4-flash">deepseek-v4-flash (~8.7s, 8 tok/s)</option>
+                        <option value="minimaxai/minimax-m2.7">minimax-m2.7 (~8.8s, 25 tok/s)</option>
+                        <option value="qwen/qwen3-coder-480b-a35b-instruct">qwen3-coder-480b (~11s, 9 tok/s)</option>
                       </optgroup>
-                      <optgroup label="--- Mistral ---">
-                        <option value="mistralai/mistral-large-3-675b-instruct-2512">mistralai/mistral-large-3-675b-instruct-2512</option>
-                        <option value="mistralai/mistral-large-2-instruct">mistralai/mistral-large-2-instruct</option>
-                        <option value="mistralai/mistral-medium-3-instruct">mistralai/mistral-medium-3-instruct</option>
-                        <option value="mistralai/mistral-medium-3.5-128b">mistralai/mistral-medium-3.5-128b</option>
-                        <option value="mistralai/mistral-small-4-119b-2603">mistralai/mistral-small-4-119b-2603</option>
-                        <option value="mistralai/ministral-14b-instruct-2512">mistralai/ministral-14b-instruct-2512</option>
-                        <option value="mistralai/codestral-22b-instruct-v0.1">mistralai/codestral-22b-instruct-v0.1</option>
-                        <option value="mistralai/devstral-2-123b-instruct-2512">mistralai/devstral-2-123b-instruct-2512</option>
-                        <option value="mistralai/magistral-small-2506">mistralai/magistral-small-2506</option>
-                        <option value="mistralai/mistral-7b-instruct-v0.3">mistralai/mistral-7b-instruct-v0.3</option>
-                        <option value="mistralai/mistral-nemotron">mistralai/mistral-nemotron</option>
-                        <option value="mistralai/mixtral-8x22b-instruct-v0.1">mistralai/mixtral-8x22b-instruct-v0.1</option>
-                        <option value="mistralai/mixtral-8x7b-instruct-v0.1">mistralai/mixtral-8x7b-instruct-v0.1</option>
+                      <optgroup label="⚠️ Very Slow / Unstable (tested)">
+                        <option value="nvidia/llama-3.3-nemotron-super-49b-v1.5">nemotron-super-49b (~27s, 9 tok/s)</option>
+                        <option value="meta/llama-3.1-8b-instruct">llama-3.1-8b (~46s, 1 tok/s)</option>
+                        <option value="moonshotai/kimi-k2.6">kimi-k2.6 (~5.3s, unstable output)</option>
                       </optgroup>
-                      <optgroup label="--- Google Gemma ---">
-                        <option value="google/gemma-4-31b-it">google/gemma-4-31b-it</option>
-                        <option value="google/gemma-3-27b-it">google/gemma-3-27b-it</option>
-                        <option value="google/gemma-3-12b-it">google/gemma-3-12b-it</option>
-                        <option value="google/gemma-3-4b-it">google/gemma-3-4b-it</option>
-                        <option value="google/gemma-3n-e4b-it">google/gemma-3n-e4b-it</option>
-                        <option value="google/gemma-3n-e2b-it">google/gemma-3n-e2b-it</option>
-                        <option value="google/gemma-2-2b-it">google/gemma-2-2b-it</option>
-                        <option value="google/codegemma-1.1-7b">google/codegemma-1.1-7b</option>
-                      </optgroup>
-                      <optgroup label="--- Moonshot Kimi ---">
-                        <option value="moonshotai/kimi-k2.6">moonshotai/kimi-k2.6</option>
-                        <option value="moonshotai/kimi-k2-instruct">moonshotai/kimi-k2-instruct</option>
-                        <option value="moonshotai/kimi-k2-thinking">moonshotai/kimi-k2-thinking</option>
-                      </optgroup>
-                      <optgroup label="--- Microsoft Phi ---">
-                        <option value="microsoft/phi-4-mini-instruct">microsoft/phi-4-mini-instruct</option>
-                        <option value="microsoft/phi-3.5-moe-instruct">microsoft/phi-3.5-moe-instruct</option>
-                      </optgroup>
-                      <optgroup label="--- OpenAI OSS ---">
-                        <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
-                        <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
-                      </optgroup>
-                      <optgroup label="--- Other ---">
-                        <option value="01-ai/yi-large">01-ai/yi-large</option>
-                        <option value="ai21labs/jamba-1.5-large-instruct">ai21labs/jamba-1.5-large-instruct</option>
-                        <option value="bytedance/seed-oss-36b-instruct">bytedance/seed-oss-36b-instruct</option>
-                        <option value="databricks/dbrx-instruct">databricks/dbrx-instruct</option>
-                        <option value="ibm/granite-3.0-8b-instruct">ibm/granite-3.0-8b-instruct</option>
-                        <option value="ibm/granite-34b-code-instruct">ibm/granite-34b-code-instruct</option>
-                        <option value="minimaxai/minimax-m2.7">minimaxai/minimax-m2.7</option>
-                        <option value="writer/palmyra-creative-122b">writer/palmyra-creative-122b</option>
-                        <option value="z-ai/glm5.1">z-ai/glm5.1</option>
-                        <option value="z-ai/glm5">z-ai/glm5</option>
+                      <optgroup label="--- Other Models (not tested) ---">
+                        <option value="nvidia/llama-3.3-nemotron-super-49b-v1">nemotron-super-49b-v1</option>
+                        <option value="nvidia/llama-3.1-nemotron-51b-instruct">nemotron-51b-instruct</option>
+                        <option value="nvidia/nemotron-mini-4b-instruct">nemotron-mini-4b</option>
+                        <option value="nvidia/llama-3.1-nemotron-nano-8b-v1">nemotron-nano-8b</option>
+                        <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning">nemotron-3-nano-omni-reasoning</option>
+                        <option value="nvidia/nemotron-nano-3-30b-a3b">nemotron-nano-3-30b</option>
+                        <option value="nvidia/mistral-nemo-minitron-8b-8k-instruct">mistral-nemo-minitron-8b</option>
+                        <option value="deepseek-ai/deepseek-v3.2">deepseek-v3.2</option>
+                        <option value="deepseek-ai/deepseek-v3.1-terminus">deepseek-v3.1-terminus</option>
+                        <option value="deepseek-ai/deepseek-coder-6.7b-instruct">deepseek-coder-6.7b</option>
+                        <option value="qwen/qwen2.5-coder-32b-instruct">qwen2.5-coder-32b</option>
+                        <option value="qwen/qwen3-next-80b-a3b-instruct">qwen3-next-80b</option>
+                        <option value="meta/llama-3.3-70b-instruct">llama-3.3-70b</option>
+                        <option value="meta/llama-3.1-70b-instruct">llama-3.1-70b</option>
+                        <option value="meta/llama-4-maverick-17b-128e-instruct">llama-4-maverick-17b</option>
+                        <option value="meta/llama-3.2-3b-instruct">llama-3.2-3b</option>
+                        <option value="meta/llama-3.2-1b-instruct">llama-3.2-1b</option>
+                        <option value="meta/codellama-70b">codellama-70b</option>
+                        <option value="mistralai/mistral-small-4-119b-2603">mistral-small-4-119b</option>
+                        <option value="mistralai/devstral-2-123b-instruct-2512">devstral-2-123b</option>
+                        <option value="mistralai/codestral-22b-instruct-v0.1">codestral-22b</option>
+                        <option value="mistralai/ministral-14b-instruct-2512">ministral-14b</option>
+                        <option value="mistralai/magistral-small-2506">magistral-small</option>
+                        <option value="mistralai/mistral-7b-instruct-v0.3">mistral-7b</option>
+                        <option value="google/gemma-3-27b-it">gemma-3-27b</option>
+                        <option value="google/gemma-3-12b-it">gemma-3-12b</option>
+                        <option value="google/gemma-3-4b-it">gemma-3-4b</option>
+                        <option value="google/gemma-3n-e4b-it">gemma-3n-e4b</option>
+                        <option value="google/gemma-2-2b-it">gemma-2-2b</option>
+                        <option value="moonshotai/kimi-k2-instruct">kimi-k2-instruct</option>
+                        <option value="moonshotai/kimi-k2-thinking">kimi-k2-thinking</option>
+                        <option value="01-ai/yi-large">yi-large</option>
+                        <option value="ai21labs/jamba-1.5-large-instruct">jamba-1.5-large</option>
+                        <option value="bytedance/seed-oss-36b-instruct">seed-oss-36b</option>
+                        <option value="databricks/dbrx-instruct">dbrx-instruct</option>
+                        <option value="ibm/granite-34b-code-instruct">granite-34b-code</option>
+                        <option value="ibm/granite-3.0-8b-instruct">granite-3.0-8b</option>
+                        <option value="writer/palmyra-creative-122b">palmyra-creative-122b</option>
+                        <option value="microsoft/phi-4-mini-instruct">phi-4-mini</option>
+                        <option value="microsoft/phi-3.5-moe-instruct">phi-3.5-moe</option>
                       </optgroup>
                     </select>
                   </FormField>

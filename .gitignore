@@ -29,6 +29,9 @@ src/ui/viewer.html
 .mcp.json
 .cursor/
 
+# Windsurf - ignore generated context rules but keep hooks.json
+.windsurf/rules/
+
 # Ignore WebStorm project files (for dinosaur IDE users)
 .idea/
 

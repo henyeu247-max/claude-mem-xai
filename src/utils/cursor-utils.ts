@@ -131,6 +131,50 @@ export function readContextFile(workspacePath: string): string | null {
 }
 
 // ============================================================================
+// Windsurf Context Functions
+// ============================================================================
+
+/**
+ * Write context file to a Windsurf project's .windsurf/rules directory
+ * Uses atomic write (temp file + rename) to prevent corruption
+ */
+export function writeWindsurfContextFile(workspacePath: string, context: string): void {
+  const rulesDir = join(workspacePath, '.windsurf', 'rules');
+  const rulesFile = join(rulesDir, 'claude-mem-context.md');
+  const tempFile = `${rulesFile}.tmp`;
+
+  mkdirSync(rulesDir, { recursive: true });
+
+  const content = `---
+alwaysApply: true
+description: "Claude-mem context from past sessions (auto-updated)"
+---
+
+# Memory Context from Past Sessions
+
+The following context is from claude-mem, a persistent memory system that tracks your coding sessions.
+
+${context}
+
+---
+*Updated after last session. Use claude-mem's MCP search tools for more detailed queries.*
+`;
+
+  // Atomic write: temp file + rename
+  writeFileSync(tempFile, content);
+  renameSync(tempFile, rulesFile);
+}
+
+/**
+ * Read context file from a Windsurf project's .windsurf/rules directory
+ */
+export function readWindsurfContextFile(workspacePath: string): string | null {
+  const rulesFile = join(workspacePath, '.windsurf', 'rules', 'claude-mem-context.md');
+  if (!existsSync(rulesFile)) return null;
+  return readFileSync(rulesFile, 'utf-8');
+}
+
+// ============================================================================
 // MCP Configuration Functions
 // ============================================================================
 

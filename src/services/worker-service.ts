@@ -101,6 +101,7 @@ import {
   updateCursorContextForProject,
   handleCursorCommand
 } from './integrations/CursorHooksInstaller.js';
+import { handleWindsurfCommand } from './integrations/WindsurfHooksInstaller.js';
 
 // Service layer imports
 import { DatabaseManager } from './worker/DatabaseManager.js';
@@ -1135,13 +1136,20 @@ async function main() {
       break;
     }
 
+    case 'windsurf': {
+      const subcommand = process.argv[3];
+      const windsurfResult = handleWindsurfCommand(subcommand, process.argv.slice(4));
+      process.exit(windsurfResult);
+      break;
+    }
+
     case 'hook': {
       // Validate CLI args first (before any I/O)
       const platform = process.argv[3];
       const event = process.argv[4];
       if (!platform || !event) {
         console.error('Usage: claude-mem hook <platform> <event>');
-        console.error('Platforms: claude-code, cursor, raw');
+        console.error('Platforms: claude-code, cursor, windsurf, raw');
         console.error('Events: context, session-init, observation, summarize, session-complete');
         process.exit(1);
       }

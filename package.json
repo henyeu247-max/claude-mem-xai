@@ -1,11 +1,14 @@
 {
   "name": "claude-mem-xai",
-  "version": "10.6.3-xai",
-  "description": "xAI Grok-only fork of claude-mem - Memory compression system with Chroma disabled by default",
+  "version": "10.7.0-xai",
+  "description": "Multi-platform fork of claude-mem - Memory system for Claude Code, Windsurf, Cursor with xAI/NVIDIA providers",
   "keywords": [
     "xai",
     "grok",
+    "nvidia",
     "claude-code",
+    "windsurf",
+    "cursor",
     "mcp",
     "plugin",
     "memory",

@@ -1,0 +1,51 @@
+{
+  "hooks": {
+    "pre_user_prompt": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf session-init",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf session-init"
+      },
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf context",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf context",
+        "show_output": true
+      }
+    ],
+    "post_read_code": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf observation",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf observation"
+      }
+    ],
+    "post_write_code": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf file-edit",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf file-edit"
+      }
+    ],
+    "post_run_command": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf observation",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf observation"
+      }
+    ],
+    "post_mcp_tool_use": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf observation",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf observation"
+      }
+    ],
+    "post_cascade_response": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf summarize",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf summarize"
+      }
+    ],
+    "post_cascade_response_with_transcript": [
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf transcript",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf transcript"
+      }
+    ]
+  }
+}

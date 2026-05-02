@@ -90,7 +90,11 @@ export class SettingsRoutes extends BaseRouteHandler {
       'CLAUDE_MEM_WORKER_HOST',
       // AI Provider Configuration
       'CLAUDE_MEM_PROVIDER',
-      // OpenRouter Configuration
+      // xAI Configuration
+      'CLAUDE_MEM_XAI_API_KEY',
+      'CLAUDE_MEM_XAI_MODEL',
+      'CLAUDE_MEM_XAI_MAX_CONTEXT_MESSAGES',
+      'CLAUDE_MEM_XAI_MAX_TOKENS',
       // NVIDIA NIM Configuration
       'CLAUDE_MEM_NVIDIA_API_KEY',
       'CLAUDE_MEM_NVIDIA_MODEL',

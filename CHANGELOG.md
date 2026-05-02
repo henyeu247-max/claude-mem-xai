@@ -2,6 +2,55 @@
 
 All notable changes to claude-mem.
 
+## [v10.7.0] - 2026-05-03
+
+## v10.7.0 — Windsurf IDE Integration
+
+### New Features
+
+- **Windsurf IDE integration**: Full support for Windsurf Cascade Hooks with 7 hook events mapped to claude-mem handlers
+  - `pre_user_prompt` → session-init + context injection
+  - `post_read_code` → observation (file reads)
+  - `post_write_code` → file-edit tracking
+  - `post_run_command` → observation (terminal commands)
+  - `post_mcp_tool_use` → observation (MCP tool calls)
+  - `post_cascade_response` → session summarize
+  - `post_cascade_response_with_transcript` → transcript processing
+- **Windsurf context injection**: Auto-writes memory context to `.windsurf/rules/claude-mem-context.md` — Windsurf loads this as a Rule in every Cascade conversation
+- **Windsurf CLI**: `claude-mem windsurf install/uninstall/status` commands
+- **Transcript handler**: New `transcript` event type for Windsurf's `post_cascade_response_with_transcript` hook
+- **`/api/sessions/transcript` route**: Worker endpoint for processing Windsurf JSONL transcripts
+
+### Bug Fixes
+
+- **Fix double-escaping in hooks.json**: Removed manual backslash escaping in both WindsurfHooksInstaller and CursorHooksInstaller — `JSON.stringify` handles it automatically
+- **Fix `require('fs')` in ESM context**: SessionRoutes transcript handler now uses proper ESM import
+- **Fix async-without-await**: WindsurfHooksInstaller functions no longer return `Promise<number>` when no async work is done
+- **Fix logger Component type**: Added `WINDSURF`, `CURSOR`, `CONFIG` to logger Component union type
+
+### Improvements
+
+- **Multi-platform README**: Updated README with Windsurf and Cursor integration docs, NVIDIA NIM provider docs
+- **Context file cwd tracking**: Windsurf adapter tracks workspace cwd from `normalizeInput` for correct context file placement
+- **`.windsurf/rules/` gitignored**: Generated context rules are ignored; `hooks.json` remains trackable
+
+### Files Changed
+
+- `src/cli/adapters/windsurf.ts` (new)
+- `src/services/integrations/WindsurfHooksInstaller.ts` (new)
+- `src/cli/handlers/transcript.ts` (new)
+- `src/cli/adapters/index.ts`
+- `src/cli/handlers/index.ts`
+- `src/cli/handlers/session-init.ts`
+- `src/cli/types.ts`
+- `src/services/worker-service.ts`
+- `src/services/worker/http/routes/SessionRoutes.ts`
+- `src/utils/cursor-utils.ts`
+- `src/utils/logger.ts`
+- `src/services/integrations/CursorHooksInstaller.ts`
+- `.gitignore`
+- `README.md`
+
 ## [v10.6.3] - 2026-03-29
 
 ## v10.6.3 — Critical Patch Release

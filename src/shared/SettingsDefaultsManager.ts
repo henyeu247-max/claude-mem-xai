@@ -18,7 +18,11 @@ export interface SettingsDefaults {
   CLAUDE_MEM_WORKER_HOST: string;
   CLAUDE_MEM_SKIP_TOOLS: string;
   // AI Provider Configuration
-  CLAUDE_MEM_PROVIDER: string;  // 'nvidia' | 'claude' | 'gemini' | 'openrouter'
+  CLAUDE_MEM_PROVIDER: string;  // 'nvidia' | 'xai'
+  CLAUDE_MEM_XAI_API_KEY: string;
+  CLAUDE_MEM_XAI_MODEL: string;
+  CLAUDE_MEM_XAI_MAX_CONTEXT_MESSAGES: string;
+  CLAUDE_MEM_XAI_MAX_TOKENS: string;
   CLAUDE_MEM_NVIDIA_API_KEY: string;
   CLAUDE_MEM_NVIDIA_MODEL: string;
   CLAUDE_MEM_NVIDIA_MAX_CONTEXT_MESSAGES: string;
@@ -77,7 +81,7 @@ export class SettingsDefaultsManager {
   private static readonly DEFAULTS: SettingsDefaults = {
     CLAUDE_MEM_MODEL: 'claude-sonnet-4-5',
     CLAUDE_MEM_CONTEXT_OBSERVATIONS: '50',
-    CLAUDE_MEM_WORKER_PORT: '37777',
+    CLAUDE_MEM_WORKER_PORT: '37778',
     CLAUDE_MEM_WORKER_HOST: '127.0.0.1',
     CLAUDE_MEM_SKIP_TOOLS: 'ListMcpResourcesTool,SlashCommand,Skill,TodoWrite,AskUserQuestion',
     // AI Provider Configuration
@@ -92,8 +96,12 @@ export class SettingsDefaultsManager {
     CLAUDE_MEM_OPENROUTER_APP_NAME: 'claude-mem',  // App name for OpenRouter analytics
     CLAUDE_MEM_OPENROUTER_MAX_CONTEXT_MESSAGES: '20',  // Max messages in context window
     CLAUDE_MEM_OPENROUTER_MAX_TOKENS: '100000',  // Max estimated tokens (~100k safety limit)
+    CLAUDE_MEM_XAI_API_KEY: '',
+    CLAUDE_MEM_XAI_MODEL: 'grok-4-1-fast-non-reasoning',
+    CLAUDE_MEM_XAI_MAX_CONTEXT_MESSAGES: '20',
+    CLAUDE_MEM_XAI_MAX_TOKENS: '100000',
     CLAUDE_MEM_NVIDIA_API_KEY: '',
-    CLAUDE_MEM_NVIDIA_MODEL: 'nvidia/llama-3.3-nemotron-super-49b-v1.5',  // Default NVIDIA model (best balance speed+quality)
+    CLAUDE_MEM_NVIDIA_MODEL: 'openai/gpt-oss-120b',  // Default NVIDIA model (fastest + best quality)
     CLAUDE_MEM_NVIDIA_MAX_CONTEXT_MESSAGES: '20',
     CLAUDE_MEM_NVIDIA_MAX_TOKENS: '100000',
     // System Configuration

@@ -321,15 +321,14 @@ export async function installCursorHooks(target: CursorInstallTarget): Promise<n
 
     // Find bun executable - required because worker-service.cjs uses bun:sqlite
     const bunPath = findBunPath();
-    const escapedBunPath = bunPath.replace(/\\/g, '\\\\');
 
     // Use the absolute path to worker-service.cjs
-    // Escape backslashes for JSON on Windows
-    const escapedWorkerPath = workerServicePath.replace(/\\/g, '\\\\');
+    // NOTE: Do NOT manually escape backslashes — JSON.stringify handles it.
+    // Manual escaping causes double-escaping (\\\\ in file → \\ after parse).
 
     // Helper to create hook command using unified CLI with bun runtime
     const makeHookCommand = (command: string) => {
-      return `"${escapedBunPath}" "${escapedWorkerPath}" hook cursor ${command}`;
+      return `"${bunPath}" "${workerServicePath}" hook cursor ${command}`;
     };
 
     console.log(`  Using Bun runtime: ${bunPath}`);

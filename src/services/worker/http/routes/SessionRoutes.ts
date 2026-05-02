@@ -6,6 +6,7 @@
  */
 
 import express, { Request, Response } from 'express';
+import { existsSync, readFileSync } from 'fs';
 import { getWorkerPort } from '../../../../shared/worker-utils.js';
 import { logger } from '../../../../utils/logger.js';
 import { stripMemoryTagsFromJson, stripMemoryTagsFromPrompt } from '../../../../utils/tag-stripping.js';
@@ -297,6 +298,7 @@ export class SessionRoutes extends BaseRouteHandler {
     app.post('/api/sessions/observations', this.handleObservationsByClaudeId.bind(this));
     app.post('/api/sessions/summarize', this.handleSummarizeByClaudeId.bind(this));
     app.post('/api/sessions/complete', this.handleCompleteByClaudeId.bind(this));
+    app.post('/api/sessions/transcript', this.handleTranscriptByClaudeId.bind(this));
   }
 
   /**
@@ -752,5 +754,70 @@ export class SessionRoutes extends BaseRouteHandler {
       skipped: false,
       contextInjected
     });
+  });
+
+  /**
+   * Handle Windsurf transcript submission
+   * POST /api/sessions/transcript
+   * Body: { contentSessionId, transcriptPath }
+   *
+   * Windsurf provides full conversation transcripts as JSONL files.
+   * This endpoint stores the transcript path for later processing.
+   */
+  private handleTranscriptByClaudeId = this.wrapHandler((req: Request, res: Response): void => {
+    const { contentSessionId, transcriptPath } = req.body;
+
+    if (!contentSessionId) {
+      res.status(400).json({ error: 'contentSessionId is required' });
+      return;
+    }
+
+    if (!transcriptPath) {
+      res.status(400).json({ error: 'transcriptPath is required' });
+      return;
+    }
+
+    logger.info('SESSION', `TRANSCRIPT | contentSessionId=${contentSessionId} | transcriptPath=${transcriptPath}`);
+
+    // Find or create session (createSDKSession is idempotent)
+    const store = this.dbManager.getSessionStore();
+    const sessionDbId = store.createSDKSession(contentSessionId, '', '');
+
+    // Store transcript path in session metadata for later processing
+    const existingSession = this.sessionManager.getSession(sessionDbId);
+    if (existingSession) {
+      (existingSession as any).transcriptPath = transcriptPath;
+    }
+
+    // Also trigger summarize if not already done — Windsurf transcript
+    // arrives at post_cascade_response which is the end of a turn
+    try {
+      if (existsSync(transcriptPath)) {
+        const transcriptContent = readFileSync(transcriptPath, 'utf-8');
+        const lines = transcriptContent.trim().split('\n');
+        // Extract last assistant message from JSONL transcript
+        let lastAssistantMsg = '';
+        for (let i = lines.length - 1; i >= 0; i--) {
+          try {
+            const step = JSON.parse(lines[i]);
+            if (step.type === 'planner_response' && step.planner_response?.response) {
+              lastAssistantMsg = step.planner_response.response;
+              break;
+            }
+          } catch { /* skip malformed lines */ }
+        }
+
+        if (lastAssistantMsg) {
+          // Queue summarize with extracted message
+          this.sessionManager.queueSummarize(sessionDbId, lastAssistantMsg);
+          this.ensureGeneratorRunning(sessionDbId, 'transcript-summarize');
+          logger.info('SESSION', `TRANSCRIPT_SUMMARIZE | sessionDbId=${sessionDbId} | extractedMsg=true`);
+        }
+      }
+    } catch (err) {
+      logger.warn('SESSION', `Transcript processing error: ${err instanceof Error ? err.message : err}`);
+    }
+
+    res.json({ sessionDbId, transcriptReceived: true });
   });
 }
