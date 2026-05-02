@@ -39,6 +39,10 @@
       {
         "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf summarize",
         "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf summarize"
+      },
+      {
+        "command": "\"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf session-complete",
+        "powershell": "& \"C:\\Users\\TONY - D\\.bun\\bin\\bun.exe\" \"Z:\\Github_henyeumax\\claude-mem-xai\\plugin\\scripts\\worker-service.cjs\" hook windsurf session-complete"
       }
     ],
     "post_cascade_response_with_transcript": [

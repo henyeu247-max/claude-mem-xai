@@ -158,11 +158,15 @@ export function installWindsurfHooks(target: WindsurfInstallTarget): number {
             powershell: makePowershell('observation'),
           },
         ],
-        // Cascade response → summarize session
+        // Cascade response → summarize session + complete session
         post_cascade_response: [
           {
             command: makeCommand('summarize'),
             powershell: makePowershell('summarize'),
+          },
+          {
+            command: makeCommand('session-complete'),
+            powershell: makePowershell('session-complete'),
           },
         ],
         // Full transcript → detailed session logging
@@ -196,7 +200,7 @@ Hook events mapped:
   post_write_code        → file-edit tracking
   post_run_command       → observation (terminal commands)
   post_mcp_tool_use     → observation (MCP tool calls)
-  post_cascade_response → session summarize
+  post_cascade_response → session summarize + session complete
   post_cascade_response_with_transcript → transcript logging
 `);
 
@@ -375,7 +379,7 @@ Hook Events:
   post_write_code        → File edit tracking
   post_run_command       → Command execution observation
   post_mcp_tool_use      → MCP tool usage observation
-  post_cascade_response  → Session summarize
+  post_cascade_response  → Session summarize + session complete
 
 For more info: https://docs.windsurf.com/windsurf/cascade/hooks
       `);

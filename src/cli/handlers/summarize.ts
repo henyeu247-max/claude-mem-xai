@@ -23,23 +23,27 @@ export const summarizeHandler: EventHandler = {
       return { continue: true, suppressOutput: true, exitCode: HOOK_EXIT_CODES.SUCCESS };
     }
 
-    const { sessionId, transcriptPath } = input;
+    const { sessionId, transcriptPath, toolResponse, platform } = input;
 
-    // Validate required fields before processing
-    if (!transcriptPath) {
-      // No transcript available - skip summary gracefully (not an error)
-      logger.debug('HOOK', `No transcriptPath in Stop hook input for session ${sessionId} - skipping summary`);
-      return { continue: true, suppressOutput: true, exitCode: HOOK_EXIT_CODES.SUCCESS };
-    }
-
-    // Extract last assistant message from transcript (the work Claude did)
-    // Note: "user" messages in transcripts are mostly tool_results, not actual user input.
-    // The user's original request is already stored in user_prompts table.
+    // Determine last assistant message:
+    // - Claude Code: extract from transcriptPath file
+    // - Windsurf: use toolResponse.response directly (from post_cascade_response)
     let lastAssistantMessage = '';
-    try {
-      lastAssistantMessage = extractLastMessage(transcriptPath, 'assistant', true);
-    } catch (err) {
-      logger.warn('HOOK', `Stop hook: failed to extract last assistant message for session ${sessionId}: ${err instanceof Error ? err.message : err}`);
+
+    if (transcriptPath) {
+      // Claude Code path: extract from transcript file
+      try {
+        lastAssistantMessage = extractLastMessage(transcriptPath, 'assistant', true);
+      } catch (err) {
+        logger.warn('HOOK', `Stop hook: failed to extract last assistant message for session ${sessionId}: ${err instanceof Error ? err.message : err}`);
+        return { continue: true, suppressOutput: true, exitCode: HOOK_EXIT_CODES.SUCCESS };
+      }
+    } else if (platform === 'windsurf' && toolResponse && typeof toolResponse === 'object' && 'response' in (toolResponse as any)) {
+      // Windsurf path: use response from post_cascade_response directly
+      lastAssistantMessage = (toolResponse as any).response ?? '';
+    } else {
+      // No transcript or response available - skip summary gracefully
+      logger.debug('HOOK', `No transcriptPath or response in summarize hook for session ${sessionId} - skipping summary`);
       return { continue: true, suppressOutput: true, exitCode: HOOK_EXIT_CODES.SUCCESS };
     }
 
